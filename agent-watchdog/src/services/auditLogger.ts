@@ -49,9 +49,10 @@ class AuditLoggerService {
    * Log a kill switch activation
    */
   logKillSwitch(agentId: string, reason: string, previousState: boolean): void {
+    const systemRequestId = uuidv4();
     db.createAuditLog({
       id: uuidv4(),
-      request_id: 'system',
+      request_id: systemRequestId,
       agent_id: agentId,
       action: 'KILL_SWITCH_ACTIVATED',
       decision: 'KILL',
@@ -68,9 +69,10 @@ class AuditLoggerService {
    * Log a kill switch restoration
    */
   logRestore(agentId: string, reason: string, previousState: boolean): void {
+    const systemRequestId = uuidv4();
     db.createAuditLog({
       id: uuidv4(),
-      request_id: 'system',
+      request_id: systemRequestId,
       agent_id: agentId,
       action: 'KILL_SWITCH_DEACTIVATED',
       decision: 'APPROVE',
