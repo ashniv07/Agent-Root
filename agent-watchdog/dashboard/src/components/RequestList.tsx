@@ -84,12 +84,12 @@ export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProp
   }
 
   return (
-    <div className="space-y-2 max-h-96 overflow-y-auto">
+    <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
       {requests.map((request) => (
         <div
           key={request.id}
           onClick={() => onSelectRequest?.(request)}
-          className="p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-750 transition-colors border border-gray-700 hover:border-gray-600"
+          className="cursor-pointer rounded-lg border border-slate-700 bg-slate-900/80 p-3"
         >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">

@@ -1,13 +1,9 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   ReactFlow,
   Node,
   Edge,
   Background,
-  Controls,
-  MiniMap,
-  useNodesState,
-  useEdgesState,
   MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -175,10 +171,15 @@ const initialEdges: Edge[] = [
 ];
 
 export function AgentFlow({ activeNodes = [], processingPath = [] }: AgentFlowProps) {
+  const normalizedPath = useMemo(
+    () => processingPath.map((nodeId) => (nodeId === 'decisionEngine' ? 'decision' : nodeId)),
+    [processingPath]
+  );
+
   const processedNodes = useMemo(() => {
     return initialNodes.map((node) => {
       const isActive = activeNodes.includes(node.id);
-      const isCompleted = processingPath.includes(node.id);
+      const isCompleted = normalizedPath.includes(node.id);
 
       let style = { ...node.style };
       if (isActive) {
@@ -189,12 +190,12 @@ export function AgentFlow({ activeNodes = [], processingPath = [] }: AgentFlowPr
 
       return { ...node, style };
     });
-  }, [activeNodes, processingPath]);
+  }, [activeNodes, normalizedPath]);
 
   const processedEdges = useMemo(() => {
     return initialEdges.map((edge) => {
-      const sourceCompleted = processingPath.includes(edge.source);
-      const targetCompleted = processingPath.includes(edge.target);
+      const sourceCompleted = normalizedPath.includes(edge.source);
+      const targetCompleted = normalizedPath.includes(edge.target);
 
       if (sourceCompleted && targetCompleted) {
         return {
@@ -205,37 +206,30 @@ export function AgentFlow({ activeNodes = [], processingPath = [] }: AgentFlowPr
       }
       return edge;
     });
-  }, [processingPath]);
-
-  const [nodes, , onNodesChange] = useNodesState(processedNodes);
-  const [edges, , onEdgesChange] = useEdgesState(processedEdges);
-
-  const onInit = useCallback(() => {
-    console.log('Flow initialized');
-  }, []);
+  }, [normalizedPath]);
 
   return (
-    <div className="h-80 bg-gray-800 rounded-lg overflow-hidden">
+    <div className="h-[360px] w-full overflow-hidden">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onInit={onInit}
+        nodes={processedNodes}
+        edges={processedEdges}
+        className="h-full w-full"
         fitView
+        fitViewOptions={{ padding: 0.16 }}
+        minZoom={0.65}
+        maxZoom={1.1}
         attributionPosition="bottom-left"
         proOptions={{ hideAttribution: true }}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
+        panOnDrag={false}
+        panOnScroll={false}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
       >
         <Background color="#374151" gap={16} />
-        <Controls className="bg-gray-700" />
-        <MiniMap
-          nodeColor={(node) => {
-            if (processingPath.includes(node.id)) return '#22c55e';
-            if (activeNodes.includes(node.id)) return '#3b82f6';
-            return '#4b5563';
-          }}
-          className="bg-gray-800"
-        />
       </ReactFlow>
     </div>
   );

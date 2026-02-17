@@ -5,6 +5,8 @@ import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <div className="monochrome-theme">
+      <App />
+    </div>
   </React.StrictMode>
 );

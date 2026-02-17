@@ -38,11 +38,11 @@ export function Stats({ refreshTrigger }: StatsProps) {
 
   if (loading || !stats) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="h-24 bg-gray-800 rounded-lg animate-pulse"
+            className="h-24 animate-pulse rounded-xl border border-slate-700 bg-slate-900/60"
           ></div>
         ))}
       </div>
@@ -100,11 +100,11 @@ export function Stats({ refreshTrigger }: StatsProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((stat) => (
           <div
             key={stat.label}
-            className={`${stat.bg} p-4 rounded-lg border border-gray-700`}
+            className={`${stat.bg} rounded-xl border border-slate-700 p-4`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">{stat.icon}</span>
@@ -117,11 +117,11 @@ export function Stats({ refreshTrigger }: StatsProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {secondaryStats.map((stat) => (
           <div
             key={stat.label}
-            className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+            className="rounded-xl border border-slate-700 bg-slate-900/70 p-4"
           >
             <div className="flex items-center justify-between">
               <span className="text-gray-400">{stat.label}</span>

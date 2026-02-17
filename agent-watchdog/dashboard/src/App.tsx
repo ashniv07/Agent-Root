@@ -1,188 +1,173 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import GppBadOutlinedIcon from '@mui/icons-material/GppBadOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import PowerSettingsNewOutlinedIcon from '@mui/icons-material/PowerSettingsNewOutlined';
+import { DashboardApp } from './components/DashboardApp';
 import { AgentFlow } from './components/AgentFlow';
-import { RequestList } from './components/RequestList';
-import { AuditLog } from './components/AuditLog';
-import { ViolationCard } from './components/ViolationCard';
-import { KillSwitch } from './components/KillSwitch';
-import { Stats } from './components/Stats';
-import { EventFeed } from './components/EventFeed';
-import { useWebSocket } from './hooks/useWebSocket';
+import { SpotlightCard } from './components/SpotlightCard';
+import botIcon from './styles/icons/bot-icon.png';
 
-interface Violation {
-  id: string;
-  type: string;
-  description: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  evidence?: string;
-  suggestedFix?: string;
-  detectedAt: string;
-}
+const typedTexts = [
+  'Monitor every request through a multi-agent security pipeline.',
+  'Classify risk, detect violations, and trigger kill-switch controls instantly.',
+  'Audit every decision with traceable reasoning and live event streams.',
+];
 
 function App() {
-  const { isConnected, events, lastEvent } = useWebSocket();
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [violations, setViolations] = useState<Violation[]>([]);
-  const [activeTab, setActiveTab] = useState<'requests' | 'audit'>('requests');
-  const [processingPath, setProcessingPath] = useState<string[]>([]);
+  const [started, setStarted] = useState(false);
+  const [textIndex, setTextIndex] = useState(0);
+  const [display, setDisplay] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Refresh data when relevant events occur
   useEffect(() => {
-    if (lastEvent) {
-      if (
-        lastEvent.type === 'request:processed' ||
-        lastEvent.type === 'killswitch:triggered'
-      ) {
-        setRefreshTrigger((prev) => prev + 1);
-      }
+    if (started) return;
 
-      if (lastEvent.type === 'violation:detected') {
-        const data = lastEvent.data as { violation?: Violation };
-        if (data.violation) {
-          setViolations((prev) => [
-            { ...data.violation!, id: crypto.randomUUID(), detectedAt: new Date().toISOString() },
-            ...prev,
-          ].slice(0, 20));
-        }
-      }
+    const fullText = typedTexts[textIndex % typedTexts.length];
+    const pauseMs = 1200;
+    const typingSpeed = 42;
+    const deletingSpeed = 28;
 
-      if (lastEvent.type === 'request:processed') {
-        const data = lastEvent.data as { processingPath?: string[] };
-        if (data.processingPath) {
-          setProcessingPath(data.processingPath);
-        }
-      }
+    if (!isDeleting && display === fullText) {
+      const pauseTimer = setTimeout(() => setIsDeleting(true), pauseMs);
+      return () => clearTimeout(pauseTimer);
     }
-  }, [lastEvent]);
 
-  const handleKillSwitch = useCallback(() => {
-    setRefreshTrigger((prev) => prev + 1);
-  }, []);
+    if (isDeleting && display === '') {
+      setIsDeleting(false);
+      setTextIndex((prev) => (prev + 1) % typedTexts.length);
+      return;
+    }
+
+    const nextValue = isDeleting
+      ? fullText.slice(0, Math.max(0, display.length - 1))
+      : fullText.slice(0, Math.min(fullText.length, display.length + 1));
+
+    const timer = setTimeout(
+      () => setDisplay(nextValue),
+      isDeleting ? deletingSpeed : typingSpeed
+    );
+
+    return () => clearTimeout(timer);
+  }, [display, isDeleting, started, textIndex]);
+
+  if (started) {
+    return <DashboardApp />;
+  }
+
+  const highlights = [
+    {
+      icon: <AccountTreeOutlinedIcon fontSize="small" />,
+      title: 'Pipeline Intelligence',
+      description:
+        'Requests flow through orchestrator, monitoring, error analysis, severity classification, and decisioning.',
+    },
+    {
+      icon: <GppBadOutlinedIcon fontSize="small" />,
+      title: 'Violation Visibility',
+      description:
+        'Track policy breaches by severity with filtered views, evidence snapshots, and actionable remediation context.',
+    },
+    {
+      icon: <FactCheckOutlinedIcon fontSize="small" />,
+      title: 'Audit Assurance',
+      description:
+        'Each decision is logged with reasoning and processing path so governance teams can review complete history.',
+    },
+    {
+      icon: <PowerSettingsNewOutlinedIcon fontSize="small" />,
+      title: 'Kill-Switch Control',
+      description:
+        'Trigger targeted or emergency agent blocks, then restore safely with clear operational status in real time.',
+    },
+  ];
+
+  const demoProcessingPath = [
+    'orchestrator',
+    'workerMonitor',
+    'errorAnalyzer',
+    'severityClassifier',
+    'fixProposer',
+    'decisionEngine',
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🛡️</span>
-            <div>
-              <h1 className="text-xl font-bold">Agent Watchdog</h1>
-              <p className="text-sm text-gray-400">
-                AI Governance & Security Layer
-              </p>
-            </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1a1a1a_0%,_#101010_45%,_#050505_100%)] text-slate-100">
+      <div className="flex min-h-screen w-full flex-col px-4 py-6 sm:px-5 md:px-10 md:py-10 lg:px-14">
+        <header className="mb-5 flex items-center gap-3 text-cyan-300 sm:mb-6">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-400/35 bg-cyan-400/10 text-base font-bold">
+            <img src={botIcon} alt="Agent Watchdog" className="h-5 w-5 object-contain" />
+          </span>
+          <div>
+            <p className="text-lg font-semibold tracking-tight text-slate-100">Agent Watchdog</p>
+           
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-3 h-3 rounded-full ${
-                  isConnected
-                    ? 'bg-green-500 animate-pulse-glow'
-                    : 'bg-red-500'
-                }`}
-                style={{ color: isConnected ? '#22c55e' : '#ef4444' }}
-              ></span>
-              <span className="text-sm text-gray-400">
-                {isConnected ? 'Live' : 'Offline'}
+        </header>
+
+        <section className="relative w-full overflow-hidden ">
+          <header className="relative flex min-h-[62vh] items-center justify-center px-2 py-10 text-center sm:min-h-[66vh] sm:py-14 md:px-8">
+            <div className="relative z-10 max-w-5xl ">
+              <h1 className="mb-5 text-3xl font-semibold text-slate-200 leading-[1.08] sm:text-4xl md:mb-10 md:text-6xl lg:text-7xl ">
+                Custom governance
+                <br />
+                for AI agent workflows
+              </h1>
+              <div className="mx-auto max-w-2xl text-xs italic text-slate-300 sm:text-sm md:text-base mb-7">
+              <span className="inline-flex items-center">
+              <span>{display}</span>
+              <span className="ml-1 inline-block h-4 w-[2px] animate-pulse bg-cyan-300" />
               </span>
-            </div>
-          </div>
-        </div>
-      </header>
+              </div>
 
-      <main className="p-6 space-y-6">
-        {/* Stats */}
-        <section>
-          <Stats refreshTrigger={refreshTrigger} />
-        </section>
-
-        {/* Agent Flow Visualization */}
-        <section className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <h2 className="text-lg font-semibold mb-4">Agent Pipeline</h2>
-          <AgentFlow processingPath={processingPath} />
-        </section>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - Requests/Audit */}
-          <div className="col-span-5">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-              <div className="flex border-b border-gray-700">
-                <button
-                  onClick={() => setActiveTab('requests')}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'requests'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Requests
-                </button>
-                <button
-                  onClick={() => setActiveTab('audit')}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'audit'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Audit Log
+              <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-400 md:mt-5 md:text-base">
+                Deliver secure AI operations with clear controls, live insights, and complete auditability.
+              </p>
+              <div className="mt-8 flex justify-center md:mt-10">
+                <button onClick={() => setStarted(true)} className="magic-button">
+                  Enter Dashboard
                 </button>
               </div>
-              <div className="p-4">
-                {activeTab === 'requests' ? (
-                  <RequestList refreshTrigger={refreshTrigger} />
-                ) : (
-                  <AuditLog refreshTrigger={refreshTrigger} />
-                )}
-              </div>
             </div>
+          </header>
+        </section>
+         <section className="mt-8 w-full md:mt-5 mb-8">
+          <div className="mb-10 text-center">
+            <h2 className="text-xl font-semibold text-slate-200 sm:text-2xl md:text-4xl">Platform Highlights</h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base md:mt-3 md:text-lg m">Core capabilities at a glance</p>
           </div>
 
-          {/* Center Column - Violations */}
-          <div className="col-span-4">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-full">
-              <h2 className="text-lg font-semibold mb-4">Recent Violations</h2>
-              {violations.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No violations detected yet.
+          <div className="marquee-container">
+            <div className="marquee-track">
+              {[...highlights, ...highlights].map((item, index) => (
+                <div key={`${item.title}-${index}`} className="marquee-item">
+                  <SpotlightCard title={item.title} description={item.description} icon={item.icon}>
+                    <p className="mt-5 text-xs uppercase tracking-[0.16em] text-cyan-300/80">
+                      Agent Watchdog
+                    </p>
+                  </SpotlightCard>
                 </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {violations.map((violation) => (
-                    <ViolationCard key={violation.id} violation={violation} />
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           </div>
+        </section>
 
-          {/* Right Column - Kill Switch & Events */}
-          <div className="col-span-3 space-y-6">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-              <h2 className="text-lg font-semibold mb-4">Kill Switch</h2>
-              <KillSwitch
-                onKillSwitch={handleKillSwitch}
-                refreshTrigger={refreshTrigger}
-              />
-            </div>
-
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 h-64">
-              <EventFeed events={events} isConnected={isConnected} />
-            </div>
+        <section className="mt-8 w-full md:mt-10">
+          <div className="mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-100 sm:text-2xl md:text-4xl">AI Flow Diagram</h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base md:mt-3 md:text-lg">Governance pipeline overview</p>
           </div>
-        </div>
-      </main>
+          <div className="w-full">
+            <AgentFlow processingPath={demoProcessingPath} />
+          </div>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 border-t border-gray-700 px-6 py-3 mt-6">
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>Agent Watchdog v1.0.0</span>
-          <span>Powered by LangGraph + Anthropic Claude</span>
-        </div>
-      </footer>
+       
+
+        <footer className="mt-auto pt-8 text-center text-sm text-slate-500">copyright (cp) 2026 . Agent Watchdog</footer>
+      </div>
     </div>
   );
 }
 
 export default App;
+

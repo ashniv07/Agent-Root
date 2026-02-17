@@ -71,7 +71,7 @@ export function AuditLog({ refreshTrigger }: AuditLogProps) {
   }
 
   return (
-    <div className="space-y-2 max-h-96 overflow-y-auto">
+    <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
       {logs.map((log) => {
         const style = decisionStyles[log.decision];
         const isExpanded = expandedId === log.id;
