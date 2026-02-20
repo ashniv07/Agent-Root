@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import SortRoundedIcon from '@mui/icons-material/SortRounded';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 
 interface Request {
   id: string;
@@ -24,16 +28,29 @@ const statusColors: Record<string, string> = {
   killed: 'bg-red-600',
 };
 
-const decisionIcons: Record<string, string> = {
-  APPROVE: '✓',
-  FLAG: '⚠',
-  KILL: '✕',
+const decisionLabels: Record<string, string> = {
+  APPROVE: 'PASS',
+  FLAG: 'WARN',
+  KILL: 'FAIL',
+};
+
+type SortKey = 'newest' | 'oldest' | 'agent' | 'status';
+
+const sortLabels: Record<SortKey, string> = {
+  newest: 'Newest',
+  oldest: 'Oldest',
+  agent: 'Agent',
+  status: 'Status',
 };
 
 export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProps) {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('newest');
+  const [starredIds, setStarredIds] = useState<Record<string, true>>({});
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -53,44 +70,21 @@ export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProp
     }
   };
 
-  const handleManualKill = async (requestId: string) => {
-    if (!window.confirm(`Are you sure you want to manually kill request ${requestId}? This action cannot be undone.`)) {
-      return;
-    }
-    try {
-      const response = await fetch(`/api/requests/${requestId}/manual-kill`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to manually kill request');
-      }
-      alert(`Request ${requestId} manually killed.`);
-      fetchRequests(); // Refresh the list to show updated status
-    } catch (err) {
-      console.error('Error manual killing request:', err);
-      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex h-32 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-900/50 rounded-lg text-red-400">
+      <div className="rounded-lg bg-red-900/50 p-4 text-red-400">
         Error: {error}
         <button
           onClick={fetchRequests}
-          className="ml-4 px-3 py-1 bg-red-600 rounded text-white text-sm hover:bg-red-700"
+          className="ml-4 rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
         >
           Retry
         </button>
@@ -100,7 +94,7 @@ export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProp
 
   if (requests.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="py-8 text-center text-gray-500">
         No requests yet. Submit a request to see it here.
       </div>
     );
@@ -125,31 +119,17 @@ export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProp
             </div>
             <div className="flex items-center gap-2">
               {request.decision && (
-                <>
-                  <span
-                    className={`text-lg ${
-                      request.decision === 'APPROVE'
-                        ? 'text-green-500'
-                        : request.decision === 'FLAG'
-                        ? 'text-yellow-500'
-                        : 'text-red-500'
-                    }`}
-                  >
-                    {decisionIcons[request.decision]}
-                  </span>
-                  {request.decision === 'FLAG' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent parent div's onClick
-                        handleManualKill(request.id);
-                      }}
-                      className="ml-2 px-2 py-1 bg-red-600 rounded-md text-white text-xs hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      title="Manually Kill Request"
-                    >
-                      Kill
-                    </button>
-                  )}
-                </>
+                <span
+                  className={`text-lg ${
+                    request.decision === 'APPROVE'
+                      ? 'text-green-500'
+                      : request.decision === 'FLAG'
+                      ? 'text-yellow-500'
+                      : 'text-red-500'
+                  }`}
+                >
+                  {decisionIcons[request.decision]}
+                </span>
               )}
               <span className="text-xs text-gray-500">
                 {new Date(request.createdAt).toLocaleTimeString()}
@@ -162,7 +142,7 @@ export function RequestList({ onSelectRequest, refreshTrigger }: RequestListProp
             <span className="text-gray-400 truncate">{request.target}</span>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
