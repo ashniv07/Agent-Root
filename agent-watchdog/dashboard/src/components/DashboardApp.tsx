@@ -8,6 +8,9 @@ import OutlinedFlagOutlinedIcon from '@mui/icons-material/OutlinedFlagOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import BubbleChartOutlinedIcon from '@mui/icons-material/BubbleChartOutlined';
+import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import { RequestList } from './RequestList';
 import { AuditLog } from './AuditLog';
 import { ViolationCard } from './ViolationCard';
@@ -185,6 +188,57 @@ export function DashboardApp() {
       ]
     : [];
 
+  const metricVisuals: Record<string, {
+    delta: string;
+    positive: boolean;
+    linePath: string;
+    fillPath: string;
+    bars: number[];
+  }> = {
+    'total-requests': {
+      delta: '+8.1%',
+      positive: true,
+      linePath: 'M2 60 C16 52, 24 46, 34 49 C44 52, 53 31, 64 34 C72 36, 82 27, 94 18',
+      fillPath: 'M2 60 C16 52, 24 46, 34 49 C44 52, 53 31, 64 34 C72 36, 82 27, 94 18 L94 64 L2 64 Z',
+      bars: [18, 26, 38, 44, 52, 66, 72, 80],
+    },
+    approved: {
+      delta: '+5.6%',
+      positive: true,
+      linePath: 'M2 54 C14 50, 24 43, 34 45 C43 47, 52 27, 64 29 C73 31, 82 18, 94 10',
+      fillPath: 'M2 54 C14 50, 24 43, 34 45 C43 47, 52 27, 64 29 C73 31, 82 18, 94 10 L94 64 L2 64 Z',
+      bars: [24, 30, 34, 42, 50, 57, 65, 74],
+    },
+    flagged: {
+      delta: '-2.3%',
+      positive: false,
+      linePath: 'M2 24 C14 27, 24 32, 34 37 C45 41, 55 33, 64 36 C74 39, 84 47, 94 55',
+      fillPath: 'M2 24 C14 27, 24 32, 34 37 C45 41, 55 33, 64 36 C74 39, 84 47, 94 55 L94 64 L2 64 Z',
+      bars: [70, 64, 58, 49, 46, 40, 33, 28],
+    },
+    killed: {
+      delta: '-1.4%',
+      positive: true,
+      linePath: 'M2 38 C14 40, 24 44, 34 48 C45 51, 55 37, 64 39 C74 42, 84 31, 94 29',
+      fillPath: 'M2 38 C14 40, 24 44, 34 48 C45 51, 55 37, 64 39 C74 42, 84 31, 94 29 L94 64 L2 64 Z',
+      bars: [35, 32, 34, 30, 26, 29, 27, 25],
+    },
+    violations: {
+      delta: '+3.2%',
+      positive: false,
+      linePath: 'M2 22 C14 24, 25 32, 36 35 C47 38, 57 29, 68 31 C79 33, 88 40, 94 45',
+      fillPath: 'M2 22 C14 24, 25 32, 36 35 C47 38, 57 29, 68 31 C79 33, 88 40, 94 45 L94 64 L2 64 Z',
+      bars: [52, 56, 60, 63, 59, 66, 71, 75],
+    },
+    agents: {
+      delta: '+1.1%',
+      positive: true,
+      linePath: 'M2 56 C16 48, 25 46, 36 42 C47 38, 57 36, 68 31 C79 26, 88 19, 94 13',
+      fillPath: 'M2 56 C16 48, 25 46, 36 42 C47 38, 57 36, 68 31 C79 26, 88 19, 94 13 L94 64 L2 64 Z',
+      bars: [20, 26, 35, 41, 50, 57, 62, 70],
+    },
+  };
+
   const sectionTitle = (label: string, Icon: typeof AnalyticsOutlinedIcon) => (
     <span className="inline-flex items-center gap-2 text-slate-100">
       <Icon fontSize="small" className="text-cyan-300" />
@@ -330,46 +384,78 @@ export function DashboardApp() {
                 ))
               : metricCards.map((card) => (
                   <MagicBentoCard key={card.key} className={card.className}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 h-[100px]">
-                        <p className="text-xs uppercase tracking-[0.08em] text-slate-400">{card.label}</p>
-                        <p className={`mt-2 font-semibold ${card.compact ? 'text-xl' : 'text-2xl'} ${card.tone}`}>{card.value}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className={`min-w-0 ${card.compact ? 'min-h-[170px]' : 'min-h-[176px]'}`}>
+                        <p className="text-sm uppercase tracking-[0.08em] text-slate-300">{card.label}</p>
+                        <p className={`mt-3 break-words font-semibold leading-tight ${card.compact ? 'text-3xl' : 'text-3xl md:text-4xl'} ${card.tone}`}>{card.value}</p>
+                        <div className="mt-3 flex items-center gap-2 text-xs">
+                          <span className={`inline-flex rounded-full border px-2 py-0.5 font-semibold ${metricVisuals[card.key].positive ? 'border-emerald-300/50 bg-emerald-500/15 text-emerald-200' : 'border-amber-300/50 bg-amber-500/10 text-amber-100'}`}>
+                            {metricVisuals[card.key].delta}
+                          </span>
+                          <span className="text-slate-500">window trend</span>
+                        </div>
                       </div>
-                      <span className={`inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 ${card.compact ? 'h-8 w-8' : 'h-9 w-9'}`}>
-                        <card.icon fontSize="small" />
+                      <span className={`inline-flex items-center justify-center rounded-xl border border-cyan-400/35 bg-cyan-500/15 text-cyan-200 ${card.compact ? 'h-11 w-11' : 'h-12 w-12'}`}>
+                        <card.icon fontSize="medium" />
                       </span>
+                    </div>
+
+                    <div className={`mt-3 rounded-xl border border-white/15 bg-slate-950/45 p-2 ${card.compact ? 'h-24' : 'h-20'}`}>
+                      {card.compact ? (
+                        <svg viewBox="0 0 96 64" className="h-full w-full">
+                          <path d={metricVisuals[card.key].fillPath} fill="rgba(148, 163, 184, 0.16)" />
+                          <path d={metricVisuals[card.key].linePath} fill="none" stroke="rgba(196, 181, 253, 0.95)" strokeWidth="2.2" />
+                          <circle cx="94" cy="18" r="3" fill="rgba(255,255,255,0.9)" />
+                        </svg>
+                      ) : (
+                        <div className="flex h-full items-end gap-1.5">
+                          {metricVisuals[card.key].bars.map((height, index) => (
+                            <span
+                              key={`${card.key}-bar-${index}`}
+                              className="w-full rounded-sm bg-gradient-to-t from-cyan-400/25 to-cyan-200/70"
+                              style={{ height: `${height}%` }}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </MagicBentoCard>
                 ))}
 
-            <section className="col-span-12">
-              <header className="mb-3">
-                <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-100">
-                  <AnalyticsOutlinedIcon fontSize="small" className="text-cyan-300" />
-                  <span>Visualization Dashboard</span>
-                </h2>
-                <p className="text-sm text-slate-400">Trends and distribution insights</p>
-              </header>
-              <InsightsDashboard refreshTrigger={refreshTrigger} />
-            </section>
+            
+              
 
-            <MagicBentoCard className="col-span-12 lg:col-span-6" title={sectionTitle('Recent Live Violations', GppBadOutlinedIcon)} subtitle="Latest policy and runtime exceptions">
+            <section className="col-span-12 grid gap-3 lg:grid-cols-12">
+              <MagicBentoCard className="col-span-12 lg:col-span-4" title={sectionTitle('Request Decisions', AnalyticsOutlinedIcon)} subtitle="Trends and distribution insights">
+                  <InsightsDashboard refreshTrigger={refreshTrigger} view="decisions" hideHeader />
+              </MagicBentoCard>
+
+              <MagicBentoCard className="col-span-12 lg:col-span-4" title={sectionTitle('Violation Severity', AnalyticsOutlinedIcon)} subtitle="Distribution by severity">
+                <div className="h-[560px] overflow-y-auto pr-1">
+                  <InsightsDashboard refreshTrigger={refreshTrigger} view="severity" hideHeader />
+                </div>
+              </MagicBentoCard>
+
+              <MagicBentoCard className="col-span-12 lg:col-span-4" title={sectionTitle('Live Event Feed', FeedOutlinedIcon)} subtitle="Streaming system activity">
+                <div className="h-[560px] overflow-y-auto pr-1">
+                  <EventFeed events={events} isConnected={isConnected} />
+                </div>
+              </MagicBentoCard>
+
+              <MagicBentoCard className="col-span-12" title={sectionTitle('Recent Live Violations', GppBadOutlinedIcon)} subtitle="Latest policy and runtime exceptions">
               {violations.length === 0 ? (
-                <div className="py-8 text-center text-slate-400">
+                <div className="py-8 h-[100px] text-center text-slate-400">
                   No live violations received yet.
                 </div>
               ) : (
-                <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+                <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
                   {violations.map((violation) => (
                     <ViolationCard key={violation.id} violation={violation} />
                   ))}
                 </div>
               )}
-            </MagicBentoCard>
-
-            <MagicBentoCard className="col-span-12 lg:col-span-6" title={sectionTitle('Live Event Feed', FeedOutlinedIcon)} subtitle="Streaming system activity">
-              <EventFeed events={events} isConnected={isConnected} />
-            </MagicBentoCard>
+              </MagicBentoCard>
+            </section>
           </MagicBento>
         )}
 

@@ -269,10 +269,12 @@ body {
   border-radius: 1rem;
   border: 1px solid rgba(100, 116, 139, 0.6);
   background:
+    linear-gradient(138deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 32%, rgba(255, 255, 255, 0) 62%),
     linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.92)),
     radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 58%);
   padding: 1rem;
   backdrop-filter: blur(10px);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .magic-bento-card::before {
@@ -285,8 +287,30 @@ body {
   pointer-events: none;
 }
 
+.magic-bento-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.18), transparent 40%);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .magic-bento-card:hover::before {
   opacity: 0;
+}
+
+.magic-bento-card:hover {
+  border-color: rgba(125, 211, 252, 0.42);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.28);
+}
+
+.glass-white-soft {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.015) 40%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(160deg, rgba(15, 23, 42, 0.84), rgba(2, 6, 23, 0.92));
+  backdrop-filter: blur(12px);
 }
 
 .magic-button {
